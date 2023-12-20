@@ -1,11 +1,12 @@
-import mysql.connector
+# import mysql.connector
 from random import randint
 
 subColumnSaltKeys = {}
+schema = {}
 
-cnx = mysql.connector.connect(
-    username='root', password='sql123', host='localhost', port='3306', database='project')
-cur = cnx.cursor()
+# cnx = mysql.connector.connect(
+#     username='root', password='sql123', host='localhost', port='3306', database='project')
+# cur = cnx.cursor()
 
 
 def generateSaltKey():
@@ -13,7 +14,7 @@ def generateSaltKey():
     y = -10
     while y < x:
         y = randint(17, 26)
-    return 'qwertyuiopasdfghjklzxcvbnm'[x:y]
+    return 'abcd'#'qwertyuiopasdfghjklzxcvbnm'[x:y]
 
 
 def createTable(data):
@@ -49,18 +50,11 @@ def createTable(data):
     print(query)
 
 
-'''def getAllRow():
-    cur.execute('select * from inventory;')
-    data = cur.fetchall()
-    saltKeys = subColumnSaltKeys.values()
-    for i in '''
-
-
 def getRow(id):
     retDict = {}
     q = f'select * from inventory where ID={id};'
-    cur.execute(q)
-    data = cur.fetchone()
+    # cur.execute(q)
+    # data = cur.fetchone()
     headers = [i[0] for i in cur.description]
     for i in range(len(headers)):
         if str(headers[i]) not in subColumnSaltKeys:
@@ -79,7 +73,66 @@ def getRow(id):
             retDict += {str(headers(i)): [retList, retList2]}
     return retDict
 
+def returnAll():
+    #cur.execute('select * from inventory')
+    #data = cur.fetchall()    
+    #headers = [i[0] for i in cur.description]
+    headers = ['ID', 'Public/NonPublic', 'Qty', 'Industry', 'Tasteabcd', 'Colourabcd', 'Smellabcd']
+    data = ((1, 'Public', 10, 'cooking', 'mmm', 'blu-blu', 'ahhaaaa'),(2, 'Public', 3, 'cooking2', 'vack', 'brawn', 'cheee'))
+    saltKeys = subColumnSaltKeys.values()
+    print(saltKeys)
+    subcolumnHeaderIndexes = []
+    for i in saltKeys:
+        t = []
+        for j in range(len(headers)):
+            print(i, headers[j])
+            if i in headers[j]:
+                t += [j]
+        subcolumnHeaderIndexes += [t]
+    returnList = []
+    for row in data:
+        rowList = []
+        subColumnList = []        
+        stopVal = -1
+        for valueIndex in range(len(row)):            
+            stopVal = max(checkSubColums(valueIndex, subcolumnHeaderIndexes))
+            print(stopVal, row[valueIndex])            
+            if valueIndex <= stopVal:
+                subColumnList += [row[valueIndex]]
+            else:
+               rowList += [row[valueIndex]]
+        if subColumnList != []:
+            rowList += [subColumnList]
+        returnList += [rowList]
+    print(returnList)
 
+def checkSubColums(index, subcolumnHeaderIndexes):
+    print(subcolumnHeaderIndexes)
+    for subColRoot in subcolumnHeaderIndexes:
+        if index in subColRoot:
+            return subColRoot
+    return [-1]
+
+def deleteRow(id): q = f'delete from inventory where id = {id};'
+
+def addRow(rows):
+    for i in rows:
+        q = 'insert into inventory values('
+        for j in range(len(i)):
+            if type(i[j]) != list and len(i) - 1 != j:
+                q += f'{i[j]},'
+            elif type(i[j]) == list and len(i) - 1 != j:
+                for k in i[j]:
+                    q += f'{k},'
+            elif type(i[j]) != list and len(i) - 1 == j:
+                q += f'{i[j]});'
+            elif type(i[j]) == list and len(i) - 1 == j:
+                for k in len(i[j]):
+                    if k != len(i[j]) - 1:
+                        q += f'{i[j][k]},'
+                    else:
+                        q += f'{i[j][k]});'
+        print(q)
 def updateRow(row_data):
     query = 'update inventory set '
     cond = 0
@@ -117,25 +170,25 @@ def updateRow(row_data):
         print(query)
 
 
-def createLoginTable(data):
-    query = "create table login (username varchar(255) primary key, password varchar(255), accessLevel varchar(255));"
-    cur.execute(query)
-    print(data)
-    for a in data:
-        q = f'insert into login values ("{a["username"]}", "{a["password"]}", "{a["accessLevel"]}");'
-        cur.execute(q)
-        cnx.commit()
+# def createLoginTable(data):
+#     query = "create table login (username varchar(255) primary key, password varchar(255), accessLevel varchar(255));"
+#     cur.execute(query)
+#     print(data)
+#     for a in data:
+#         q = f'insert into login values ("{a["username"]}", "{a["password"]}", "{a["accessLevel"]}");'
+#         cur.execute(q)
+#         cnx.commit()
 
 
-def login(user, password):
-    cur.execute('select * from login;')
-    data = cur.fetchall()
-    print(data)
-    for i in data:
-        if i[0:2] == (user, password):
-            return True
-        else:
-            return False
+# def login(user, password):
+#     cur.execute('select * from login;')
+#     data = cur.fetchall()
+#     print(data)
+#     for i in data:
+#         if i[0:2] == (user, password):
+#             return True
+#         else:
+#             return False
 
 
 data = [
@@ -144,6 +197,7 @@ data = [
     {
         'name': "Qty",
         'type': "number",
+        'subColumns' : []
     },
     {'name': "Industry", 'type': "string", 'subColumns': []},
     {
@@ -165,3 +219,6 @@ row_data = {"ID": 1, "Public/NonPublic": "Public", "Qty": [[
     ["Colour"],
     ["Smell"],
 ], ["Sweet", "Green", "Pungent"]]}
+
+
+addRow([[1, 'Public', 10, 'cooking', 'mmm', 'blu-blu', 'ahhaaaa'],[2, 'Public', 3, 'cooking2', 'vack', 'brawn', 'cheee']])
